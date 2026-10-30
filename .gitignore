@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.venv*/
+.virtualenv/
+
+# Environment variables / secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+secrets.json
+credentials.json
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+log/
+
+# Test / coverage
+.pytest_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.dmypy.json
+
+# Build
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Temp
+*.tmp
+*.temp
+tmp/
+temp/
+*.bak
+*.backup
+*.old
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Docker
+.docker/
+docker-compose.override.yml

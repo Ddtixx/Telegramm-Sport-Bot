@@ -1,0 +1,66 @@
+name: CI/CD
+on:
+  push:
+    branches: [main, Aeza_serv]
+  pull_request:
+    branches: [main]
+
+jobs:
+  Test:
+    name: Test
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Установка зависимостей
+        run: pip install -r requirements.txt
+
+  Build:
+    name: Build
+    needs: Test
+    if: github.ref == 'refs/heads/Aeza_serv'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Вход в Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Установка buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Сборка и пуш в Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/tgbot:latest
+
+  Deploy:
+    name: Deploy
+    needs: Build
+    if: github.ref == 'refs/heads/Aeza_serv'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Деплой на сервер
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.AEZA_IP }}
+          username: ${{ secrets.AEZA_USER }}
+          password: ${{ secrets.AEZA_PASSWD }}
+          script: |
+            cd ~/TGBOTIK
+            docker compose down
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
