@@ -39,13 +39,15 @@ Telegram-бот для расчёта КБЖУ и подбора продукт�
 cp .env.example .env
 ```
 
-Переменная	Описание
-API	Токен Telegram-бота (получить у @BotFather)
-DATABASE_URL	URL подключения к PostgreSQL
-ALERTMANAGER_BOT_TOKEN	Токен отдельного бота для алертов
-ALERTMANAGER_CHAT_ID	ID чата для получения алертов
-GF_SECURITY_ADMIN_USER	Логин администратора Grafana
-GF_SECURITY_ADMIN_PASSWORD	Пароль администратора Grafana
+| Переменная | Описание |
+|---|---|
+| `API` | Токен Telegram-бота (получить у @BotFather) |
+| `DATABASE_URL` | URL подключения к PostgreSQL |
+| `ALERTMANAGER_BOT_TOKEN` | Токен отдельного бота для алертов |
+| `ALERTMANAGER_CHAT_ID` | ID чата для получения алертов |
+| `GF_SECURITY_ADMIN_USER` | Логин администратора Grafana |
+| `GF_SECURITY_ADMIN_PASSWORD` | Пароль администратора Grafana |
+
 
 Локальный запуск
 
@@ -53,7 +55,7 @@ GF_SECURITY_ADMIN_PASSWORD	Пароль администратора Grafana
 docker compose up -d
 ```
 
-##CI/CD
+### CI/CD
 
 При пуше в ветку main:
 
@@ -63,7 +65,7 @@ docker compose up -d
 
 Для деплоя в настройках репозитория (Settings → Secrets and variables → Actions) должны быть заданы секреты DOCKER_USERNAME, DOCKER_PASSWORD, HOST_IP, HOST_USER, HOST_PASSWD.
 
-##Парсер (ветка 'parser')
+## Парсер (ветка 'parser')
 
 Парсер собирает товары ВкусВилл через MCP-сервер ВкусВилл и сохраняет их в PostgreSQL. Бот читает эту базу при подборе продуктов.
 Состав
@@ -73,7 +75,7 @@ parser/collect_products.py — основной скрипт: по списку 
 parser/requirements.txt — зависимости парсера.
 Инфраструктура (PostgreSQL и Redis) описана в отдельном файле docker-compose этой ветки.
 
-##Таблицы базы
+### Таблицы базы
 
 retailers — ритейлеры. Запись с кодом vkusvill должна существовать до запуска парсера.
 categories — категории товаров, уникальны в паре «ритейлер + внешний ID».
@@ -81,7 +83,7 @@ products — товары с весом в граммах, единицей из
 
 Схема создаётся из schema.sql, который должен лежать в корне ветки.
 
-##Запуск
+### Запуск
 
 Заполните .env в корне репозитория (переменная DATABASE_URL). Путь к файлу можно переопределить через ENV_FILE.
 Установите зависимости и запустите сбор:
