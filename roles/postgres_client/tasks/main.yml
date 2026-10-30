@@ -1,0 +1,10 @@
+---
+- name: Обновление пакетов
+  apt: 
+    update_cache: true
+
+- name: Установка клиента Postgresql
+  apt: 
+    name:  "postgresql-client"
+    state: present 
+

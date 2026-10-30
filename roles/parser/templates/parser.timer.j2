@@ -1,0 +1,10 @@
+[Unit]
+Description=Run VkusVill Parser every 12 hours
+
+[Timer]
+OnCalendar={{ parser_timer_on_calendar }}
+Persistent=true
+Unit=parser.service
+
+[Install]
+WantedBy=timers.target

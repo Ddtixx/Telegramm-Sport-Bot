@@ -1,0 +1,43 @@
+---
+common_packages:
+  - curl
+  - git
+  - htop 
+  - vim
+  - nano 
+  - ufw
+  - fail2ban
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - python3-pip
+  - python3-venv
+  - apt-transport-https 
+  - software-properties-common
+
+common_timezone: "Europe/Moscow"
+
+common_ssh_port: 22
+common_ufw_enabled: true
+
+common_ufw_default_incoming: deny
+common_ufw_default_outgoing: allow
+common_ufw_rules:
+  - port: 22
+    proto: tcp
+    rule: allow
+  - port: 80
+    proto: tcp
+    rule: allow
+  - port: 443
+    proto: tcp
+    rule: allow
+
+common_fail2ban_bantime: 600
+common_fail2ban_findtime: 3600
+common_fail2ban_enabled: true
+common_fail2ban_maxretry: 5
+common_fail2ban_ignoreip: ['127.0.0.1/8', '::1']
+common_fail2ban_sshd_enabled: true
+common_fail2ban_sshd_maxretry: 3
+

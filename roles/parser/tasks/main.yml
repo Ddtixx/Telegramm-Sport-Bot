@@ -1,0 +1,73 @@
+---
+- name: Установить python3-venv и pip
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+    state: present
+    update_cache: true
+  become: true
+
+- name: Создать директорию парсера
+  ansible.builtin.file:
+    path: "{{ parser_dir }}"
+    state: directory
+    owner: "{{ parser_owner }}"
+    group: "{{ parser_owner_group }}"
+    mode: '0755'
+  become: true
+
+- name: Копировать файлы парсера
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ parser_dir }}/{{ item }}"
+    owner: "{{ parser_owner }}"
+    group: "{{ parser_owner_group }}"
+    mode: '0644'
+  loop:
+    - collect_products.py
+    - mcp_client.py
+    - requirements.txt
+  become: true
+
+- name: Создать venv
+  ansible.builtin.command:
+    cmd: "{{ parser_python }} -m venv --upgrade-deps {{ parser_venv_dir }}"
+    creates: "{{ parser_venv_dir }}/bin/pip"
+  become: true
+  become_user: "{{ parser_owner }}"
+
+- name: Установить зависимости
+  ansible.builtin.pip:
+    requirements: "{{ parser_dir }}/requirements.txt"
+    virtualenv: "{{ parser_venv_dir }}"
+  become: true
+  become_user: "{{ parser_owner }}"
+
+- name: Создать systemd service
+  ansible.builtin.template:
+    src: parser.service.j2
+    dest: /etc/systemd/system/parser.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: reload systemd
+
+- name: Создать systemd timer
+  ansible.builtin.template:
+    src: parser.timer.j2
+    dest: /etc/systemd/system/parser.timer
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: reload systemd
+
+- name: Запустить и включить таймер
+  ansible.builtin.systemd:
+    name: parser.timer
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true

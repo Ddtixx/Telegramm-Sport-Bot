@@ -1,0 +1,64 @@
+---
+- name: Обновление кэша пакет-менджера
+  become: true
+  apt:
+    update_cache: yes 
+
+- name: Установка пакета базовых утилит
+  apt: 
+    name: "{{ common_packages }}"
+    state: present
+  become: true
+
+- name: Установка часового пояса
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+  become: true
+
+- name: Настройка правил  ufw 
+  ufw:
+    rule: "{{ item.rule  }}"
+    port: "{{ item.port  }}"
+    proto: "{{ item.proto  }}"
+  become: true
+  when: common_ufw_enabled
+  loop: "{{ common_ufw_rules  }}"
+
+- name: Настройка icoming
+  ufw:
+    default: "{{ common_ufw_default_incoming }}"
+    direction: incoming
+  become: true
+  when: common_ufw_enabled
+
+- name: Настройка outcoming
+  ufw:
+    default: "{{ common_ufw_default_outgoing }}"
+    direction: outgoing
+  become: true
+  when: common_ufw_enabled
+
+- name: ufw activated
+  ufw:
+    state: enabled
+  become: true
+  when: common_ufw_enabled
+
+- name: fail2ban создать jail.local
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root 
+    group: root
+    mode: '0664'
+  become: true
+  when: common_fail2ban_enabled
+  notify: restart fail2ban
+
+- name: Fail2ban — запустить и включить
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: yes
+  become: true
+  when: common_fail2ban_enabled

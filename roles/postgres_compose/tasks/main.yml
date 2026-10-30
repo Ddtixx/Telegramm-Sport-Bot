@@ -1,0 +1,82 @@
+---
+- name: Проверить наличие Docker
+  ansible.builtin.command: docker --version
+  register: postgres_compose_docker_check
+  changed_when: false
+  failed_when: false
+
+- name: Установить Docker, если нет
+  ansible.builtin.apt:
+    name: [docker.io, docker-compose-v2, python3-docker]
+    state: present
+    update_cache: true
+  become: true
+  when: postgres_compose_docker_check.rc != 0
+
+- name: Docker запущен
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+
+- name: Создать директорию {{ postgres_compose_dir }}
+  ansible.builtin.file:
+    path: "{{ postgres_compose_dir }}"
+    state: directory
+    owner: "{{ postgres_compose_owner }}"
+    group: "{{ postgres_compose_group }}"
+    mode: '0755'
+  become: false
+
+- name: Копировать docker-compose.yml
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ postgres_compose_dir }}/docker-compose.yml"
+    owner: "{{ postgres_compose_owner }}"
+    group: "{{ postgres_compose_group }}"
+    mode: '0644'
+  become: true
+  notify: restart compose
+
+- name: Копировать schema.sql
+  ansible.builtin.copy:
+    src: schema.sql
+    dest: "{{ postgres_compose_dir }}/schema.sql"
+    owner: "{{ postgres_compose_owner }}"
+    group: "{{ postgres_compose_group }}"
+    mode: '0644'
+  become: true
+
+- name: Создать .env
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ postgres_compose_dir }}/.env"
+    owner: "{{ postgres_compose_owner }}"
+    group: "{{ postgres_compose_group }}"
+    mode: '0600'
+  become: true
+  notify: restart compose
+
+- name: Запустить docker compose up -d
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ postgres_compose_dir }}"
+  become: true
+  register: postgres_compose_up
+  changed_when: >
+    'Started' in postgres_compose_up.stderr
+    or 'Created' in postgres_compose_up.stderr
+    or 'Recreated' in postgres_compose_up.stderr
+
+- name: Статус контейнеров
+  ansible.builtin.command:
+    cmd: docker compose ps
+    chdir: "{{ postgres_compose_dir }}"
+  register: postgres_compose_ps
+  changed_when: false
+  become: true
+
+- name: Показать статус
+  ansible.builtin.debug:
+    var: postgres_compose_ps.stdout_lines

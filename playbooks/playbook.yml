@@ -1,0 +1,21 @@
+- name: my_servers
+  hosts: all
+  become: true
+  roles:
+    - ping
+    - common
+    - wireguard
+
+- name: PostgreSQL client
+  hosts: PRODSERV
+  roles:
+    - postgres_client
+    - tgbot
+  become: true
+
+- name: PostgreSQL и Redis (docker compose) + parser
+  hosts: PARSERSERV
+  become: true
+  roles:
+    - postgres_compose
+    - parser

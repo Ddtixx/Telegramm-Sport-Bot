@@ -1,0 +1,17 @@
+---
+wireguard_address: "10.20.0.2/24"
+
+wireguard_peers:
+  - name: node1
+    public_key: "<NODE1_PUB_KEY>"
+    allowed_ips: "10.20.0.1/32"
+    endpoint: "<NODE1_IP>:51820"
+    persistent_keepalive: 25
+
+tgbot_bind_address: "10.20.0.2"
+tgbot_database_url: "postgresql://tgbot:<POSTGRES_PASSWORD>@10.20.0.1:5432/tgbot"
+tgbot_api: "<TELEGRAM_BOT_TOKEN>"
+tgbot_grafana_admin_user: admin
+tgbot_grafana_admin_password: "<GRAFANA_ADMIN_PASSWORD>"
+tgbot_alertmanager_bot_token: "<ALERTMANAGER_BOT_TOKEN>"
+tgbot_alertmanager_chat_id: "<ALERTMANAGER_CHAT_ID>"

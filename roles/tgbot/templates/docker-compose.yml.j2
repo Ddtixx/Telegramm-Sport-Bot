@@ -1,0 +1,70 @@
+services:
+  bot:
+    image: {{ tgbot_bot_image }}
+    container_name: tgbot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./db:/app/db
+
+  node-exporter:
+    image: {{ tgbot_node_exporter_image }}
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "{{ tgbot_bind_address }}:{{ tgbot_node_exporter_port }}:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro,rslave
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  prometheus:
+    image: {{ tgbot_prometheus_image }}
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "{{ tgbot_bind_address }}:{{ tgbot_prometheus_port }}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=10d'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: {{ tgbot_grafana_image }}
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "{{ tgbot_bind_address }}:{{ tgbot_grafana_port }}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER={{ tgbot_grafana_admin_user }}
+      - GF_SECURITY_ADMIN_PASSWORD={{ tgbot_grafana_admin_password }}
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+  alerting:
+    image: {{ tgbot_alertmanager_image }}
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "{{ tgbot_bind_address }}:{{ tgbot_alertmanager_port }}:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:

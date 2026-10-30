@@ -1,0 +1,13 @@
+---
+parser_project_dir: /home/ubuntu/tgbotik
+
+parser_dir: "{{ parser_project_dir }}/parser"
+
+parser_venv_dir: "{{ parser_project_dir }}/.venv-parser"
+
+parser_python: python3
+
+parser_owner: ubuntu
+parser_owner_group: ubuntu
+
+parser_timer_on_calendar: "*-*-* 00,12:00:00"

@@ -1,0 +1,24 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'telegram'
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '{{ tgbot_alertmanager_bot_token }}'
+        chat_id: {{ tgbot_alertmanager_chat_id }}
+        parse_mode: 'HTML'
+        message: |
+           <b>{{ "{{ .Status | toUpper }}" }}</b>
+
+          {{ "{{ range .Alerts }}" }}
+          <b>Alert:</b> {{ "{{ .Annotations.summary }}" }}
+          <b>Description:</b> {{ "{{ .Annotations.description }}" }}
+          <b>Severity:</b> {{ "{{ .Labels.severity }}" }}
+          {{ "{{ end }}" }}

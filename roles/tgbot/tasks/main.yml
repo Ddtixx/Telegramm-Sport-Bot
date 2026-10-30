@@ -1,0 +1,168 @@
+---
+- name: Обновление пакетов
+  apt:
+    update_cache: true
+    state: present
+  become: true
+
+- name: Установить зависимости для репозитория Docker
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+  become: true
+
+- name: Создать /etc/apt/keyrings
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Добавить GPG-ключ Docker
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+  become: true
+
+- name: Добавить репозиторий Docker
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/ubuntu
+      {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+    update_cache: true
+  become: true
+
+- name: Установить Docker CE
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  become: true
+  notify: restart docker
+
+- name: Запуск Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+
+- name: Создание директории проекта
+  file: 
+    path: "{{ tgbot_dir }}"
+    state: directory
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_owner }}"
+    mode: '0755'
+  become: true
+
+- name: Создать поддиректории
+  ansible.builtin.file:
+    path: "{{ tgbot_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0755'
+  loop:
+    - TgBot
+    - prometheus
+    - prometheus/rules
+    - alertmanager
+  become: true
+
+- name: Копировать файлы проекта
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ tgbot_dir }}/{{ item }}"
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0644'
+  loop:
+    - Dockerfile
+    - requirements.txt
+    - README.md
+    - TgBot/main.py
+    - TgBot/services.py
+    - TgBot/spiski.py
+    - TgBot/start_and_calc_keyboards.py
+    - TgBot/.gitignore
+    - prometheus/rules/alerts.yml
+  become: true
+  notify: restart tgbot
+
+- name: Рендерить prometheus.yml
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: "{{ tgbot_dir }}/prometheus/prometheus.yml"
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0644'
+  become: true
+  notify: restart tgbot
+
+- name: Рендерить alertmanager.yml
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: "{{ tgbot_dir }}/alertmanager/alertmanager.yml"
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0644'
+  become: true
+  notify: restart tgbot
+
+- name: Рендерить docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ tgbot_dir }}/docker-compose.yml"
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0644'
+  become: true
+  notify: restart tgbot
+
+- name: Рендерить .env
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ tgbot_dir }}/.env"
+    owner: "{{ tgbot_owner }}"
+    group: "{{ tgbot_group }}"
+    mode: '0600'
+  become: true
+  notify: restart tgbot
+
+- name: Запустить docker compose
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ tgbot_dir }}"
+  become: true
+  register: tgbot_up
+  changed_when: >
+    'Started' in tgbot_up.stderr
+    or 'Created' in tgbot_up.stderr
+    or 'Recreated' in tgbot_up.stderr
+
+- name: Статус контейнеров
+  ansible.builtin.command:
+    cmd: docker compose ps
+    chdir: "{{ tgbot_dir }}"
+  register: tgbot_ps
+  changed_when: false
+  become: true
+
+- name: Показать статус
+  ansible.builtin.debug:
+    var: tgbot_ps.stdout_lines
+

@@ -1,0 +1,30 @@
+---
+
+tgbot_dir: "{{ ansible_user_dir  }}/tgbot"
+tgbot_owner: "{{ ansible_user  }}"
+tgbot_group: "{{ ansible_user  }}"
+
+tgbot_bot_image: "ddtixx/tgbot:latest"
+tgbot_node_exporter_image: "prom/node-exporter:latest"
+tgbot_prometheus_image: "prom/prometheus:latest"
+tgbot_grafana_image: "grafana/grafana-enterprise:latest"
+tgbot_alertmanager_image: "prom/alertmanager:latest"
+
+tgbot_bind_address: "10.20.0.2"
+tgbot_prometheus_port: 9090
+tgbot_grafana_port: 3000
+tgbot_alertmanager_port: 9093
+tgbot_node_exporter_port: 9100
+
+tgbot_grafana_admin_user: admin
+tgbot_grafana_admin_password: admin
+
+tgbot_alertmanager_bot_token: ""
+tgbot_alertmanager_chat_id: ""
+
+tgbot_prometheus_targets:
+  - "10.20.0.1:9100"
+  - "node-exporter:9100"
+
+tgbot_api: ""
+tgbot_database_url: ""

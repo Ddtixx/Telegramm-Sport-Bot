@@ -1,0 +1,12 @@
+---
+wireguard_packages:
+  - wireguard
+  - wireguard-tools
+
+wireguard_interface: wg0
+wireguard_port: 51820
+
+wireguard_private_key_file: /etc/wireguard/private.key
+
+wireguard_address: ""
+wireguard_peers: []

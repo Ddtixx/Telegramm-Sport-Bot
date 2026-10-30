@@ -1,0 +1,60 @@
+---
+- name: Установка WireGuard
+  ansible.builtin.apt:
+    name: "{{ wireguard_packages }}"
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Активация IP Forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+  become: true
+
+- name: Проверка наличия приватного ключа
+  ansible.builtin.stat:
+    path: "{{ wireguard_private_key_file }}"
+  register: wg_key_stat
+  become: true
+
+- name: Генерация приватного ключа
+  ansible.builtin.shell: |
+    umask 077
+    wg genkey > {{ wireguard_private_key_file }}
+  when: not wg_key_stat.stat.exists
+  become: true
+  changed_when: true
+
+- name: Чтение приватного ключа
+  ansible.builtin.slurp:
+    src: "{{ wireguard_private_key_file }}"
+  register: wg_private_key_slurp
+  become: true
+
+- name: Создание конфига
+  ansible.builtin.template:
+    src: wg.conf.j2
+    dest: "/etc/wireguard/{{ wireguard_interface }}.conf"
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  notify: Перезагрузка wireguard
+
+- name: Открыть порт UFW
+  community.general.ufw:
+    rule: allow
+    port: "{{ wireguard_port }}"
+    proto: udp
+  become: true
+
+- name: Запуск WireGuard
+  ansible.builtin.service:
+    name: "wg-quick@{{ wireguard_interface }}"
+    state: started
+    enabled: yes
+  become: true

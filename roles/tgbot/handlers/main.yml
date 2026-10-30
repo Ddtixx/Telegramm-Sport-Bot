@@ -1,0 +1,13 @@
+---
+- name: restart docker
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  become: true
+
+- name: restart tgbot
+  ansible.builtin.command:
+    cmd: docker compose up -d --force-recreate
+    chdir: "{{ tgbot_dir }}"
+  become: true
+  listen: restart tgbot

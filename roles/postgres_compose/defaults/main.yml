@@ -1,0 +1,8 @@
+---
+postgres_compose_dir: "/home/ubuntu/tgbotik"
+postgres_compose_owner: "{{ ansible_user }}"
+postgres_compose_group: "{{ ansible_user }}"
+
+postgres_db: ""
+postgres_user: ""
+postgres_password: ""
